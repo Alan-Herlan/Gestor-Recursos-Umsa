@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Recursos Institucionales</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div id="login-section" class="container mt-5" style="max-width: 400px;">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="text-center mb-4">Iniciar Sesión</h3>
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" required value="admin@umsa.edu">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" id="password" class="form-control" required value="misuperpassword">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+                </form>
+                <div id="login-error" class="text-danger mt-3 text-center d-none">Credenciales inválidas</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-section" class="container mt-5 d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Inventario de Recursos</h2>
+            <button class="btn btn-danger" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Nro. Serie</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-recursos">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Manejo del Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Guardamos el token en localStorage para usarlo luego
+                localStorage.setItem('jwt_token', data.token);
+                
+                // Cambiamos de pantalla
+                document.getElementById('login-section').classList.add('d-none');
+                document.getElementById('dashboard-section').classList.remove('d-none');
+                
+                // Cargamos los recursos
+                cargarRecursos();
+            } else {
+                document.getElementById('login-error').classList.remove('d-none');
+            }
+        });
+
+        // Cargar datos de la API
+        async function cargarRecursos() {
+            // Verificamos si hay token para hacer peticiones protegidas si fuera necesario
+            const token = localStorage.getItem('jwt_token');
+            
+            const response = await fetch('/api/recursos', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                const recursos = await response.json();
+                const tbody = document.getElementById('tabla-recursos');
+                tbody.innerHTML = ''; // Limpiar tabla
+                
+                recursos.forEach(recurso => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${recurso.id}</td>
+                            <td>${recurso.nombre}</td>
+                            <td>${recurso.nro_serie}</td>
+                            <td><span class="badge bg-${recurso.estado === 'Disponible' ? 'success' : 'warning'}">${recurso.estado}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('jwt_token');
+            document.getElementById('dashboard-section').classList.add('d-none');
+            document.getElementById('login-section').classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>
