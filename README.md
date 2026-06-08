@@ -28,8 +28,8 @@ Este sistema permite la administración eficiente de activos institucionales (co
 - `GET /api/consultas/historial/<id>`: Consultar historial de movimientos.
 
 ## 5. Participantes
-- [Tu Nombre]
-- [Nombre de tu compañero]
+- [Alan]
+- []
 
 ---
 *Gestión 2026 - Carrera de Informática UMSA*
